@@ -146,7 +146,8 @@ function App() {
             <main className="app-content">
               <ChannelList
                 items={filteredItems}
-                onOpen={(item) => setSelectedItem(item)}
+                onItemClick={(item) => setSelectedItem(item)}
+                onOpenClick={handleOpenItem}
               />
             </main>
           </>

@@ -268,6 +268,15 @@ html, body {
   display: flex;
   align-items: center;
   transition: var(--transition-fast);
+  cursor: pointer;
+  user-select: none;
+  border-radius: 12px;
+  padding: 6px 8px;
+  margin: 0 -8px;
+}
+
+.list-item:active {
+  background-color: rgba(0, 0, 0, 0.035);
 }
 
 .item-avatar-container {

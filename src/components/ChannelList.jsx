@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ChannelList = ({ items, onOpen }) => {
+const ChannelList = ({ items, onItemClick, onOpenClick }) => {
   if (items.length === 0) {
     return (
       <div className="empty-state">
@@ -47,7 +47,11 @@ const ChannelList = ({ items, onOpen }) => {
           {/* List of items in this category */}
           <div className="category-items">
             {categoryItems.map((item) => (
-              <div key={item.id} className="list-item">
+              <div
+                key={item.id}
+                className="list-item"
+                onClick={() => onItemClick(item)}
+              >
                 <div className="item-avatar-container">
                   <div
                     className="item-avatar"
@@ -63,7 +67,13 @@ const ChannelList = ({ items, onOpen }) => {
                 </div>
 
                 <div className="item-action">
-                  <button className="open-action-btn" onClick={() => onOpen(item)}>
+                  <button
+                    className="open-action-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenClick(item);
+                    }}
+                  >
                     Ochish
                   </button>
                 </div>
