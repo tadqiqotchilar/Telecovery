@@ -1,26 +1,42 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const CountrySelector = ({ isOpen, onClose, countries, selectedCountry, onSelect }) => {
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [animateClass, setAnimateClass] = useState('');
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 
-  useEffect(() => {
+  // Derived state: update shouldRender immediately when isOpen changes to true
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
       setShouldRender(true);
+    }
+  }
+
+  useEffect(() => {
+    let timer1, timer2;
+    if (isOpen) {
       // Small delay to trigger transition after mounting
-      const timer = setTimeout(() => {
+      timer1 = setTimeout(() => {
         setAnimateClass('open');
       }, 10);
-      return () => clearTimeout(timer);
     } else {
-      setAnimateClass('');
+      // Defer state update to next tick to avoid synchronous setState inside effect warning
+      timer1 = setTimeout(() => {
+        setAnimateClass('');
+      }, 0);
       // Delay unmounting until transition finishes (300ms)
-      const timer = setTimeout(() => {
+      timer2 = setTimeout(() => {
         setShouldRender(false);
       }, 300);
-      return () => clearTimeout(timer);
     }
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
   }, [isOpen]);
+
+
 
   if (!shouldRender) return null;
 

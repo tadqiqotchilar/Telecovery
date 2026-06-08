@@ -1,18 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Tabs from './components/Tabs';
 import ChannelList from './components/ChannelList';
 import CountrySelector from './components/CountrySelector';
 import ChannelDetail from './components/ChannelDetail';
-import { countries, itemsData } from './data/channelsData';
+import { dataManager } from './data/dataManager';
+
+// Admin Component Imports
+import AdminLogin from './components/AdminLogin';
+import AdminLayout from './components/AdminLayout';
+import AdminEcosystem from './components/AdminEcosystem';
+import AdminKatalog from './components/AdminKatalog';
+import AdminSettings from './components/AdminSettings';
+
 import './App.css';
 
+// Initialize data manager
+dataManager.init();
+
 function App() {
+  // Client States
+  const countries = dataManager.getCountries();
   const [activeCountry, setActiveCountry] = useState(countries[0]);
   const [activeTab, setActiveTab] = useState('all');
   const [isCountrySelectorOpen, setIsCountrySelectorOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
+  
+  // Routing & Admin States
+  const [route, setRoute] = useState(window.location.hash);
+  const [adminTab, setAdminTab] = useState('ecosystem');
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(dataManager.isAdminLoggedIn());
+
+  // Watch for hash changes for routing
+  useEffect(() => {
+    const handleHashChange = () => {
+      setRoute(window.location.hash);
+      setIsAdminLoggedIn(dataManager.isAdminLoggedIn());
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   useEffect(() => {
     // Initialize Telegram WebApp SDK if running inside Telegram
@@ -61,7 +89,7 @@ function App() {
 
   // Filter items by type and search query
   const getFilteredItems = () => {
-    const countryItems = itemsData[activeCountry.id] || [];
+    const countryItems = dataManager.getItems().filter(item => item.country === activeCountry.id);
     
     return countryItems.filter((item) => {
       // 1. Filter by Tab Type
@@ -71,7 +99,7 @@ function App() {
       const matchesSearch = 
         searchQuery.trim() === '' ||
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.username && item.username.toLowerCase().includes(searchQuery.toLowerCase())) ||
         item.category.toLowerCase().includes(searchQuery.toLowerCase());
         
       return matchesTab && matchesSearch;
@@ -80,6 +108,24 @@ function App() {
 
   const filteredItems = getFilteredItems();
 
+  // Admin Views Routing Logic
+  if (route.startsWith('#/admin')) {
+    if (!isAdminLoggedIn) {
+      return <AdminLogin onLoginSuccess={() => setIsAdminLoggedIn(true)} />;
+    }
+
+    return (
+      <AdminLayout activeTab={adminTab} onTabChange={setAdminTab}>
+        {adminTab === 'ecosystem' && <AdminEcosystem />}
+        {adminTab === 'katalog' && <AdminKatalog />}
+        {adminTab === 'sozlamalar' && (
+          <AdminSettings onLogout={() => setIsAdminLoggedIn(false)} />
+        )}
+      </AdminLayout>
+    );
+  }
+
+  // Client view (Telegram Mini App)
   return (
     <div className="app-viewport">
       <div className="app-container">
@@ -150,6 +196,11 @@ function App() {
                 onOpenClick={handleOpenItem}
               />
             </main>
+
+            {/* Quick Link to Admin Panel for convenience */}
+            <div className="client-footer-admin-link">
+              <a href="#/admin">Admin paneliga o'tish →</a>
+            </div>
           </>
         )}
 
@@ -167,3 +218,4 @@ function App() {
 }
 
 export default App;
+

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const ChannelDetail = ({ item, onBack, onOpen }) => {
   const [showToast, setShowToast] = useState(false);
@@ -55,9 +55,13 @@ const ChannelDetail = ({ item, onBack, onOpen }) => {
         <div className="detail-avatar-container">
           <div
             className="detail-avatar"
-            style={{ background: item.avatarColor }}
+            style={{ background: item.avatar ? 'transparent' : item.avatarColor }}
           >
-            {item.initials}
+            {item.avatar ? (
+              <img src={item.avatar} alt={item.title} className="item-avatar-img" />
+            ) : (
+              item.initials
+            )}
           </div>
         </div>
 

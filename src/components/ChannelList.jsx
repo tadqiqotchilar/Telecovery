@@ -1,4 +1,3 @@
-import React from 'react';
 
 const ChannelList = ({ items, onItemClick, onOpenClick }) => {
   if (items.length === 0) {
@@ -55,9 +54,13 @@ const ChannelList = ({ items, onItemClick, onOpenClick }) => {
                 <div className="item-avatar-container">
                   <div
                     className="item-avatar"
-                    style={{ background: item.avatarColor }}
+                    style={{ background: item.avatar ? 'transparent' : item.avatarColor }}
                   >
-                    {item.initials}
+                    {item.avatar ? (
+                      <img src={item.avatar} alt={item.title} className="item-avatar-img" />
+                    ) : (
+                      item.initials
+                    )}
                   </div>
                 </div>
 

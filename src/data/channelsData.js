@@ -1,7 +1,7 @@
 export const countries = [
-  { id: 'uz', name: 'Uzbekistan', flag: '🇺🇿', nativeName: 'O\'zbekiston' },
-  { id: 'us', name: 'United States', flag: '🇺🇸', nativeName: 'USA' },
-  { id: 'ru', name: 'Russia', flag: '🇷🇺', nativeName: 'Россия' }
+  { id: 'uz', name: 'O\'zbekiston', flag: '🇺🇿', nativeName: 'O\'zbekiston' },
+  { id: 'us', name: 'Amerika Qo\'shma Shtatlari', flag: '🇺🇸', nativeName: 'AQSh' },
+  { id: 'ru', name: 'Rossiya', flag: '🇷🇺', nativeName: 'Rossiya' }
 ];
 
 export const itemsData = {
@@ -41,7 +41,7 @@ export const itemsData = {
       avatarColor: 'linear-gradient(135deg, #141e30, #243b55)',
       initials: 'Q',
       link: 'https://t.me/quloq_news',
-      description: 'QULOQ News — Ўзбекистон ва дунё янгиликларини қисқа ва тезкор шаклда етказиб берувчи мустақил лойиҳа. Энг муҳим воқеаларнинг қисқа мазмуни ва тезкор видео-таҳлиллар.'
+      description: 'QULOQ News — Ўзбекистон va dunyo yangiliklarini qisqa va tezkor shaklda yetkazib beruvchi mustaqil loyiha. Eng muhim voqealarning qisqa mazmuni va tezkor video-tahlillar.'
     },
     {
       id: 'uz_ch_4',
@@ -53,7 +53,7 @@ export const itemsData = {
       avatarColor: 'linear-gradient(135deg, #f12711, #f5af19)',
       initials: 'TA',
       link: 'https://t.me/teacherazam',
-      description: 'Teacher Azam — Инглиз тилини осон ва қизиқарли усулда ўргатувчи таниқли ўқитувчи Аъзам Аъзамовнинг расмий блоги. Бу ерда фойдали видеолар, тил ўрганиш бўйича маслаҳатлар ва кундалик ҳаётий тажрибалар жойлаб борилади.'
+      description: 'Teacher Azam — Ingliz tilini oson va qiziqarli usulda o\'rgatuvchi taniqli o\'qituvchi A\'zam A\'zamovning rasmiy blogi. Bu yerda foydali videolar, til o\'rganish bo\'yicha maslahatlar va kundalik hayotiy tajribalar joylab boriladi.'
     },
     {
       id: 'uz_ch_5',
@@ -65,7 +65,7 @@ export const itemsData = {
       avatarColor: 'linear-gradient(135deg, #fc466b, #3f5efb)',
       initials: 'K',
       link: 'https://t.me/kunduziy',
-      description: 'KUNDUZIY — Жамиятдаги кундалик воқеалар, ижтимоий муаммолар ва муҳим мавзулар ҳақида сатирик ҳамда юмористик қарашларни улашувчи, кўплаб мухлисларга эга муаллифлик блоги.'
+      description: 'KUNDUZIY — Jamiyatdagi kundalik voqealar, ijtimoiy muammolar va muhim mavzular haqida satirik hamda yumoristik qarashlarni ulashuvchi, ko\'plab muxlislarga ega mualliflik blogi.'
     },
     {
       id: 'uz_ch_6',
@@ -77,7 +77,7 @@ export const itemsData = {
       avatarColor: 'linear-gradient(135deg, #11998e, #38ef7d)',
       initials: 'Z',
       link: 'https://t.me/ziyokhonov',
-      description: 'Ziyokhonov — Технологиялар, дастурлаш ва рақамли дунё ҳақида қизиқарли фикрлар, таҳлиллар ҳамда шахсий тажрибалар улашилувчи муаллифлик блоги.'
+      description: 'Ziyokhonov — Texnologiyalar, dasturlash va raqamli dunyo haqida qiziqarli fikrlar, tahlillar hamda shaxsiy tajribalar ulashiluvchi mualliflik blogi.'
     },
     // Groups
     {
@@ -90,7 +90,7 @@ export const itemsData = {
       avatarColor: 'linear-gradient(135deg, #00b09b, #96c93d)',
       initials: 'NT',
       link: 'https://t.me/najottalim_community',
-      description: 'Najot Ta\'lim маркази талабалари ва битирувчиларининг расмий жамияти. Бу ерда дастурлаш, дизайн ва маркетинг мавзулари муҳокама қилинади ва янги бошловчиларга ёрдам берилади.'
+      description: 'Najot Ta\'lim markazi talabalari va bitiruvchilarining rasmiy jamiyati. Bu yerda dasturlash, dizayn va marketing mavzulari muhokama qilinadi va yangi boshlovchilarga yordam beriladi.'
     },
     {
       id: 'uz_gr_2',
@@ -102,7 +102,7 @@ export const itemsData = {
       avatarColor: 'linear-gradient(135deg, #2193b0, #6dd5ed)',
       initials: 'UC',
       link: 'https://t.me/udevs_community',
-      description: 'Udevs Community — Дастурчилар, лойиҳа менежерлари ва IT соҳаси вакиллари учун тажриба алмашиш ва саволларга жавоб олиш учун мўлжалланган фаол гуруҳ.'
+      description: 'Udevs Community — Dasturchilar, loyiha menejerlari va IT sohasi vakillari uchun tajriba almashish va savollarga javob olish uchun mo\'ljallangan faol guruh.'
     },
     {
       id: 'uz_gr_3',
@@ -114,7 +114,7 @@ export const itemsData = {
       avatarColor: 'linear-gradient(135deg, #8a2387, #e94057, #f27121)',
       initials: 'PQ',
       link: 'https://t.me/pm_qa_uz',
-      description: 'Ўзбекистондаги лойиҳа менежерлари (Project Manager) ва сифат назоратчилари (QA) жамияти. Бу ерда тажриба алмашиш, касбий саволларга жавоб топиш ва IT соҳасидаги янги вакансиялар муҳокама қилинади.'
+      description: 'O\'zbekistondagi loyiha menejerlari (Project Manager) va sifat nazoratchilari (QA) jamiyati. Bu yerda tajriba almashish, kasbiy savollarga javob topish va IT sohasidagi yangi vakansiyalar muhokama qilinadi.'
     },
     // Bots
     {
@@ -127,19 +127,19 @@ export const itemsData = {
       avatarColor: 'linear-gradient(135deg, #4568dc, #b06ab3)',
       initials: 'LK',
       link: 'https://t.me/LotinKirillBot',
-      description: 'Ўзбек тилидаги матнларни Лотин алифбосидан Кирилл алифбосига ёки аксинча Кириллдан Лотинга бир сонияда бехато ўгириб берувчи, кундалик ишларда жуда фойдали ва тезкор бот.'
+      description: 'O\'zbek tilidagi matnlarni Lotin alifbosidan Kirill alifbosiga yoki aksincha Kirilldan Lotinga bir soniyada bexato o\'girib beruvchi, kundalik ishlarda juda foydali va tezkor bot.'
     },
     {
       id: 'uz_bt_2',
       title: 'SaveAs Media Downloader',
       username: 'SaveAsBot',
-      subtext: 'Video & audio yuklovchi',
+      subtext: 'Video & audio yuklovchi bot',
       type: 'bot',
       category: 'Media botlar',
       avatarColor: 'linear-gradient(135deg, #373b44, #4286f4)',
       initials: 'SA',
       link: 'https://t.me/SaveAsBot',
-      description: 'Telegram, Instagram, YouTube, TikTok ва бошқа машҳур ижтимоий тармоқлардан видео ҳамда аудиоларни бир неча сонияда юқори сифатда юклаб олувчи кўп функцияли бот.'
+      description: 'Telegram, Instagram, YouTube, TikTok va boshqa mashhur ijtimoiy tarmoqlardan video hamda audiolarni bir necha soniyada yuqori sifatda yuklab oluvchi ko\'p funksiyali bot.'
     }
   ],
   us: [
@@ -148,99 +148,99 @@ export const itemsData = {
       id: 'us_ch_1',
       title: 'TechCrunch Official',
       username: 'techcrunch',
-      subtext: '450,230 subscribers',
+      subtext: '450,230 obunachi',
       type: 'channel',
-      category: 'News & Technology',
+      category: 'Yangiliklar va texnologiyalar',
       avatarColor: 'linear-gradient(135deg, #00b09b, #96c93d)',
       initials: 'TC',
       link: 'https://t.me/techcrunch',
-      description: 'TechCrunch is startup and technology news plus coverage of the hottest tech trends. Keep up with the latest updates from the startup world and tech developments globally.'
+      description: 'TechCrunch — startaplar va texnologiyalar olamining eng so\'nggi yangiliklarini yorituvchi global media platformasi. Dunyo startaplari va IT yangiliklaridan boxabar bo\'ling.'
     },
     {
       id: 'us_ch_2',
       title: 'The New York Times',
       username: 'nytimes',
-      subtext: '890,550 subscribers',
+      subtext: '890,550 obunachi',
       type: 'channel',
-      category: 'News & Technology',
+      category: 'Yangiliklar va texnologiyalar',
       avatarColor: 'linear-gradient(135deg, #1f4068, #162447, #1b1a17)',
       initials: 'NY',
       link: 'https://t.me/nytimes',
-      description: 'The New York Times official news channel. Bringing you breaking news, world reports, investigative journalism, and analysis of current global affairs directly to your feed.'
+      description: 'The New York Times gazetasining rasmiy Telegram kanali. Dunyo yangiliklari, tahliliy maqolalar, surishtiruvlar va eng muhim global voqealarni to\'g\'ridan-to\'g\'ri yetkazadi.'
     },
     {
       id: 'us_ch_3',
       title: 'NASA News Feed',
       username: 'nasa',
-      subtext: '320,110 subscribers',
+      subtext: '320,110 obunachi',
       type: 'channel',
-      category: 'Science & Education',
+      category: 'Ilm-fan va ta\'lim',
       avatarColor: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)',
       initials: 'NA',
       link: 'https://t.me/nasa',
-      description: 'Official NASA channel for updates on space exploration, updates from space telescopes, astronauts missions, and science breakthroughs from outer space.'
+      description: 'NASA rasmiy kanali. Koinotni tadqiq qilish, teleskoplar yordamida olingan suratlar, kosmonavtlar missiyalari va fazoviy ilm-fan yutuqlari haqidagi eng so\'nggi ma\'lumotlar.'
     },
     {
       id: 'us_ch_4',
       title: 'Bloomberg Markets',
       username: 'bloomberg',
-      subtext: '512,900 subscribers',
+      subtext: '512,900 obunachi',
       type: 'channel',
-      category: 'Finance & Business',
+      category: 'Moliya va biznes',
       avatarColor: 'linear-gradient(135deg, #000000, #434343)',
       initials: 'BB',
       link: 'https://t.me/bloomberg',
-      description: 'Official Bloomberg channel tracking global financial markets, economic policy updates, trade details, stock performances, and major corporate events worldwide.'
+      description: 'Bloomberg rasmiy kanali. Global moliyaviy bozorlar, iqtisodiy siyosat, aksiyalar, savdo-sotiq va yirik biznes yangiliklarini yoritib boradi.'
     },
     // Groups
     {
       id: 'us_gr_1',
       title: 'Python Developers worldwide',
       username: 'python_devs',
-      subtext: '34,200 members',
+      subtext: '34,200 a\'zo',
       type: 'group',
-      category: 'Programming Communities',
+      category: 'Dasturlash jamoalari',
       avatarColor: 'linear-gradient(135deg, #30cfd0, #330867)',
       initials: 'PY',
       link: 'https://t.me/python',
-      description: 'Global community for Python programmers. Discuss code optimizations, libraries, frameworks (Django, Flask, FastAPI), ask debugging questions, and network with developers.'
+      description: 'Python dasturlash tili bo\'yicha global hamjamiyat. Kod yozish, kutubxonalar va freymvorklar (Django, Flask, FastAPI) bilan ishlash bo\'yicha savollarga javob olish va tajriba almashish guruhi.'
     },
     {
       id: 'us_gr_2',
       title: 'Crypto Traders Global',
       username: 'crypto_traders',
-      subtext: '78,400 members',
+      subtext: '78,400 a\'zo',
       type: 'group',
-      category: 'Finance & Business',
+      category: 'Moliya va biznes',
       avatarColor: 'linear-gradient(135deg, #f857a6, #ff5858)',
       initials: 'CT',
       link: 'https://t.me/crypto',
-      description: 'Discussion forum for cryptocurrency analysis, bitcoin price movements, altcoins, DeFi progress, technical analysis, and market updates from professional traders.'
+      description: 'Kriptovalyuta bozori tahlili, bitcoin narxi o\'zgarishi, yangi altcoinlar va DeFi loyihalari bo\'yicha professional treyderlar muhokama guruhi.'
     },
     // Bots
     {
       id: 'us_bt_1',
       title: 'ControllerBot',
       username: 'ControllerBot',
-      subtext: 'For channel administrators',
+      subtext: 'Kanal administratorlari uchun bot',
       type: 'bot',
-      category: 'Utilities',
+      category: 'Yordamchi botlar',
       avatarColor: 'linear-gradient(135deg, #00c6ff, #0072ff)',
       initials: 'CB',
       link: 'https://t.me/ControllerBot',
-      description: 'A helper bot for Telegram channel administrators. Allows scheduling posts, adding reactions, checking post statistics, and creating styled formatting buttons.'
+      description: 'Telegram kanallari administratorlari uchun yordamchi bot. Rejalashtirilgan postlar joylash, postlarga reaksiya tugmalarini qo\'shish va batafsil statistikani ko\'rish imkonini beradi.'
     },
     {
       id: 'us_bt_2',
       title: 'VoteBot (Poll Maker)',
       username: 'VoteBot',
-      subtext: 'Create polls & votes',
+      subtext: 'So\'rovnomalar yaratish boti',
       type: 'bot',
-      category: 'Utilities',
+      category: 'Yordamchi botlar',
       avatarColor: 'linear-gradient(135deg, #11998e, #38ef7d)',
       initials: 'VB',
       link: 'https://t.me/VoteBot',
-      description: 'Simple bot to create polls and collect feedback in channels and groups. You can compile multiple-choice answers, toggle anonymous voting, and see live results.'
+      description: 'Kanallar va guruhlarda so\'rovnomalar yaratish boti. Variantli savollar tuzish, ovoz yig\'ish va natijalarni real vaqt rejimida ko\'rish imkonini beradi.'
     }
   ],
   ru: [
@@ -249,63 +249,63 @@ export const itemsData = {
       id: 'ru_ch_1',
       title: 'РБК свежие новости',
       username: 'rbc_news',
-      subtext: '620,330 подписчиков',
+      subtext: '620,330 obunachi',
       type: 'channel',
-      category: 'Новости и СМИ',
+      category: 'Xabarlar va yangiliklar',
       avatarColor: 'linear-gradient(135deg, #0099f7, #f11712)',
       initials: 'РБ',
       link: 'https://t.me/rbc_news',
-      description: 'Официальный канал РБК. Последние новости политики, экономики, бизнеса и технологий. Аналитические отчеты и прямые трансляции главных событий.'
+      description: 'RBK rasmiy kanali. Siyosat, iqtisodiyot, biznes va texnologiya sohasidagi eng so\'nggi va muhim voqealar. Tahliliy hisobotlar va ekspertlar fikri.'
     },
     {
       id: 'ru_ch_2',
       title: 'Лентач',
       username: 'lentach',
-      subtext: '1,450,200 подписчиков',
+      subtext: '1,450,200 obunachi',
       type: 'channel',
-      category: 'Юмор и Блоги',
+      category: 'Yumor va bloglar',
       avatarColor: 'linear-gradient(135deg, #ea00d9, #711c91)',
       initials: 'ЛТ',
       link: 'https://t.me/lentach',
-      description: 'Лентач — легендарный сатирический медиа-проект. Освещает главные новости с юмором, мемами и авторской иронией.'
+      description: 'Lentach — ommabop satirik media kanali. Dunyodagi eng muhim va qiziqarli yangiliklarni yumor, memlar va o\'ziga xos hazillar bilan yoritib boradi.'
     },
     {
       id: 'ru_ch_3',
       title: 'Хабр Технологии',
       username: 'habr_tech',
-      subtext: '280,440 подписчиков',
+      subtext: '280,440 obunachi',
       type: 'channel',
-      category: 'Технологии',
+      category: 'Texnologiyalar',
       avatarColor: 'linear-gradient(135deg, #4facfe, #00f2fe)',
       initials: 'ХБ',
       link: 'https://t.me/habr_tech',
-      description: 'Хабр — главное русскоязычное сообщество IT-специалистов. Публикации о веб-разработке, дизайне, администрировании, программировании и карьерном росте.'
+      description: 'Habr — rus tilidagi eng yirik IT-mutaxassislar hamjamiyati. Veb-dasturlash, dizayn, tizimli boshqaruv va IT olamidagi yangi texnologiyalar bo\'yicha maqolalar.'
     },
     // Groups
     {
       id: 'ru_gr_1',
       title: 'Frontend Guild Russia',
       username: 'frontend_guild',
-      subtext: '19,800 участников',
+      subtext: '19,800 a\'zo',
       type: 'group',
-      category: 'Технологии',
+      category: 'Texnologiyalar',
       avatarColor: 'linear-gradient(135deg, #ff0844, #ffb199)',
       initials: 'FE',
       link: 'https://t.me/frontend',
-      description: 'Сообщество фронтенд-разработчиков (React, Vue, Angular, Svelte, JS/TS). Обсуждение фреймворков, разбор кода, обмен опытом и вакансии.'
+      description: 'Frontend dasturchilari (React, Vue, Angular, Svelte, JS/TS) hamjamiyati. Kod tahlillari, savol-javoblar, yangi freymvorklar muhokamasi va vakansiyalar.'
     },
     // Bots
     {
       id: 'ru_bt_1',
       title: 'Stickers Bot',
       username: 'StickersBot',
-      subtext: 'Создание стикерпаков',
+      subtext: 'Stikerlar yaratish boti',
       type: 'bot',
-      category: 'Полезные боты',
+      category: 'Foydali botlar',
       avatarColor: 'linear-gradient(135deg, #667eea, #764ba2)',
       initials: 'SB',
       link: 'https://t.me/Stickers',
-      description: 'Официальный бот Telegram для управления наборами стикеров. Позволяет создавать новые стикерпаки, добавлять статические, анимированные или видеостикеры.'
+      description: 'Stikerlar va stikerpaklarni yaratish hamda boshqarish uchun rasmiy Telegram boti. Yangi stikerlar qo\'shish, o\'chirish va ularni sozlash imkonini beradi.'
     }
   ]
 };
