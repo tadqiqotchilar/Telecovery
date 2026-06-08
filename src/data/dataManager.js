@@ -34,7 +34,10 @@ function getRandomGradient() {
 
 export const dataManager = {
   init() {
-    if (!localStorage.getItem('telecovery_initialized')) {
+    const DATA_VERSION = 'v2_uz';
+    const currentVersion = localStorage.getItem('telecovery_data_version');
+    
+    if (!localStorage.getItem('telecovery_initialized') || currentVersion !== DATA_VERSION) {
       // Flatten existing items and add country property
       const flatItems = [];
       const categoriesSet = new Set();
@@ -54,6 +57,7 @@ export const dataManager = {
       localStorage.setItem('telecovery_items', JSON.stringify(flatItems));
       localStorage.setItem('telecovery_categories', JSON.stringify(Array.from(categoriesSet)));
       localStorage.setItem('telecovery_admin_password', 'admin');
+      localStorage.setItem('telecovery_data_version', DATA_VERSION);
       localStorage.setItem('telecovery_initialized', 'true');
     }
   },

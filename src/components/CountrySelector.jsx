@@ -1,47 +1,8 @@
-import { useEffect, useState } from 'react';
+import React from 'react';
 
 const CountrySelector = ({ isOpen, onClose, countries, selectedCountry, onSelect }) => {
-  const [shouldRender, setShouldRender] = useState(isOpen);
-  const [animateClass, setAnimateClass] = useState('');
-  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
-
-  // Derived state: update shouldRender immediately when isOpen changes to true
-  if (isOpen !== prevIsOpen) {
-    setPrevIsOpen(isOpen);
-    if (isOpen) {
-      setShouldRender(true);
-    }
-  }
-
-  useEffect(() => {
-    let timer1, timer2;
-    if (isOpen) {
-      // Small delay to trigger transition after mounting
-      timer1 = setTimeout(() => {
-        setAnimateClass('open');
-      }, 10);
-    } else {
-      // Defer state update to next tick to avoid synchronous setState inside effect warning
-      timer1 = setTimeout(() => {
-        setAnimateClass('');
-      }, 0);
-      // Delay unmounting until transition finishes (300ms)
-      timer2 = setTimeout(() => {
-        setShouldRender(false);
-      }, 300);
-    }
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-    };
-  }, [isOpen]);
-
-
-
-  if (!shouldRender) return null;
-
   return (
-    <div className={`bottom-sheet-overlay ${animateClass}`} onClick={onClose}>
+    <div className={`bottom-sheet-overlay ${isOpen ? 'open' : ''}`} onClick={onClose}>
       <div className="bottom-sheet-container" onClick={(e) => e.stopPropagation()}>
         {/* iOS Drag Handle */}
         <div className="drag-handle"></div>
