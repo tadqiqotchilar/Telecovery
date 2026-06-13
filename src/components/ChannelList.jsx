@@ -1,5 +1,5 @@
 
-const ChannelList = ({ items, onItemClick, onOpenClick }) => {
+const ChannelList = ({ items, onItemClick, onOpenClick, onCategoryClick }) => {
   if (items.length === 0) {
     return (
       <div className="empty-state">
@@ -26,7 +26,7 @@ const ChannelList = ({ items, onItemClick, onOpenClick }) => {
       {Object.entries(categories).map(([categoryName, categoryItems]) => (
         <div key={categoryName} className="category-group">
           {/* Category Title Header */}
-          <div className="category-header">
+          <div className="category-header" onClick={() => onCategoryClick(categoryName)}>
             <h2 className="category-title">{categoryName}</h2>
             <svg
               className="chevron-right"

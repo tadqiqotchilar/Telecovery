@@ -4,6 +4,7 @@ import Tabs from './components/Tabs';
 import ChannelList from './components/ChannelList';
 import CountrySelector from './components/CountrySelector';
 import ChannelDetail from './components/ChannelDetail';
+import CategoryView from './components/CategoryView';
 import { dataManager } from './data/dataManager';
 
 // Admin Component Imports
@@ -26,6 +27,7 @@ function App() {
   const [isCountrySelectorOpen, setIsCountrySelectorOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   
   // Routing & Admin States
   const [route, setRoute] = useState(window.location.hash);
@@ -70,11 +72,22 @@ function App() {
         return () => {
           tg.BackButton.offClick(handleBack);
         };
+      } else if (selectedCategory) {
+        tg.BackButton.show();
+        const handleBack = () => {
+          setSelectedCategory(null);
+        };
+        tg.BackButton.onClick(handleBack);
+        
+        // Cleanup event listener
+        return () => {
+          tg.BackButton.offClick(handleBack);
+        };
       } else {
         tg.BackButton.hide();
       }
     }
-  }, [selectedItem]);
+  }, [selectedItem, selectedCategory]);
 
   // Handle open action (t.me links)
   const handleOpenItem = (item) => {
@@ -157,6 +170,17 @@ function App() {
               onOpenClick={handleOpenItem}
             />
           </main>
+        ) : selectedCategory ? (
+          /* Category Page View */
+          <main className="app-content-category animate-fade-in">
+            <CategoryView
+              categoryName={selectedCategory}
+              items={dataManager.getItems().filter(item => item.category === selectedCategory && item.country === activeCountry.id)}
+              onBack={() => setSelectedCategory(null)}
+              onItemClick={(item) => setSelectedItem(item)}
+              onOpenClick={handleOpenItem}
+            />
+          </main>
         ) : (
           /* Homepage List View */
           <>
@@ -213,6 +237,7 @@ function App() {
                 items={filteredItems}
                 onItemClick={(item) => setSelectedItem(item)}
                 onOpenClick={handleOpenItem}
+                onCategoryClick={(cat) => setSelectedCategory(cat)}
               />
             </main>
 
