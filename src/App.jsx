@@ -108,6 +108,22 @@ function App() {
 
   const filteredItems = getFilteredItems();
 
+  // Get related items of the same type and category
+  const getRelatedItems = (item) => {
+    if (!item) return [];
+    const allItems = dataManager.getItems();
+    const countryItems = allItems.filter(i => i.country === item.country);
+    let related = countryItems.filter(i => i.type === item.type);
+    
+    // Filter by same category to make it "similar"
+    const sameCategory = related.filter(i => i.category === item.category);
+    if (sameCategory.length > 0) {
+      related = sameCategory;
+    }
+    
+    return related;
+  };
+
   // Admin Views Routing Logic
   if (route.startsWith('#/admin')) {
     if (!isAdminLoggedIn) {
@@ -136,6 +152,9 @@ function App() {
               item={selectedItem}
               onBack={() => setSelectedItem(null)}
               onOpen={handleOpenItem}
+              relatedItems={getRelatedItems(selectedItem)}
+              onItemClick={(item) => setSelectedItem(item)}
+              onOpenClick={handleOpenItem}
             />
           </main>
         ) : (

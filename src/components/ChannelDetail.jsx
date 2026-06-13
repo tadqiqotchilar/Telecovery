@@ -1,10 +1,19 @@
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-const ChannelDetail = ({ item, onBack, onOpen }) => {
+const ChannelDetail = ({ item, onBack, onOpen, relatedItems, onItemClick, onOpenClick }) => {
   const [showToast, setShowToast] = useState(false);
 
   // Check if Telegram WebApp BackButton is available
   const isTelegram = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData);
+
+  // Scroll to top when active item changes
+  useEffect(() => {
+    const container = document.querySelector('.app-content-detail');
+    if (container) {
+      container.scrollTop = 0;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [item.id]);
 
   const handleShare = (e) => {
     e.stopPropagation();
@@ -37,6 +46,18 @@ const ChannelDetail = ({ item, onBack, onOpen }) => {
     }
   };
 
+  const getRelatedSectionTitle = () => {
+    switch (item.type) {
+      case 'group':
+        return 'Shunga yaqin guruhlar';
+      case 'bot':
+        return 'Shunga yaqin botlar';
+      case 'channel':
+      default:
+        return 'Shunga yaqin kanallar';
+    }
+  };
+
   return (
     <div className="detail-view-container">
       {/* Fallback back button for standard browsers (hidden in Telegram) */}
@@ -55,13 +76,9 @@ const ChannelDetail = ({ item, onBack, onOpen }) => {
         <div className="detail-avatar-container">
           <div
             className="detail-avatar"
-            style={{ background: item.avatar ? 'transparent' : item.avatarColor }}
+            style={{ background: item.avatarColor }}
           >
-            {item.avatar ? (
-              <img src={item.avatar} alt={item.title} className="item-avatar-img" />
-            ) : (
-              item.initials
-            )}
+            {item.initials}
           </div>
         </div>
 
@@ -100,6 +117,66 @@ const ChannelDetail = ({ item, onBack, onOpen }) => {
         <h3 className="detail-section-title">{getSectionTitle()}</h3>
         <p className="detail-description-text">{item.description}</p>
       </div>
+
+      {/* Similar / Related Items Section */}
+      {relatedItems && relatedItems.length > 0 && (
+        <div className="related-items-section">
+          <hr className="detail-divider" style={{ marginTop: '30px' }} />
+          
+          <div className="category-header">
+            <h2 className="category-title">{getRelatedSectionTitle()}</h2>
+            <svg
+              className="chevron-right"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </div>
+
+          <div className="category-items">
+            {relatedItems.map((relatedItem) => (
+              <div
+                key={relatedItem.id}
+                className="list-item"
+                onClick={() => onItemClick(relatedItem)}
+              >
+                <div className="item-avatar-container">
+                  <div
+                    className="item-avatar"
+                    style={{ background: relatedItem.avatarColor }}
+                  >
+                    {relatedItem.initials}
+                  </div>
+                </div>
+
+                <div className="item-details">
+                  <span className="item-title">{relatedItem.title}</span>
+                  <span className="item-subtext">{relatedItem.subtext}</span>
+                </div>
+
+                <div className="item-action">
+                  <button
+                    className="open-action-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenClick(relatedItem);
+                    }}
+                  >
+                    Ochish
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Clipboard Toast Notification */}
       {showToast && (
