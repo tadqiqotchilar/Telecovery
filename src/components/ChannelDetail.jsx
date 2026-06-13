@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const ChannelDetail = ({ item, onBack, onOpen, relatedItems, onItemClick, onOpenClick }) => {
   const [showToast, setShowToast] = useState(false);

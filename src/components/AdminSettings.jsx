@@ -10,52 +10,63 @@ function AdminSettings({ onLogout }) {
   const [passSuccess, setPassSuccess] = useState('');
 
   // Password submission
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = async (e) => {
     e.preventDefault();
     setPassError('');
     setPassSuccess('');
 
-    // Check current password
-    if (!dataManager.checkPassword(currentPassword)) {
-      setPassError('Hozirgi parol noto\'g\'ri kiritildi.');
-      return;
-    }
+    try {
+      // Check current password
+      const isCorrect = await dataManager.checkPassword(currentPassword);
+      if (!isCorrect) {
+        setPassError('Hozirgi parol noto\'g\'ri kiritildi.');
+        return;
+      }
 
-    // Check new password length
-    if (newPassword.length < 4) {
-      setPassError('Yangi parol kamida 4 ta belgidan iborat bo\'lishi kerak.');
-      return;
-    }
+      // Check new password length
+      if (newPassword.length < 4) {
+        setPassError('Yangi parol kamida 4 ta belgidan iborat bo\'lishi kerak.');
+        return;
+      }
 
-    // Check password match
-    if (newPassword !== confirmPassword) {
-      setPassError('Yangi parollar mos kelmadi.');
-      return;
-    }
+      // Check password match
+      if (newPassword !== confirmPassword) {
+        setPassError('Yangi parollar mos kelmadi.');
+        return;
+      }
 
-    // Update
-    const updated = dataManager.updatePassword(newPassword);
-    if (updated) {
-      setPassSuccess('Parol muvaffaqiyatli o\'zgartirildi!');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } else {
-      setPassError('Xatolik yuz berdi. Parol o\'zgartirilmadi.');
+      // Update
+      const updated = await dataManager.updatePassword(newPassword);
+      if (updated) {
+        setPassSuccess('Parol muvaffaqiyatli o\'zgartirildi!');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        setPassError('Xatolik yuz berdi. Parol o\'zgartirilmadi.');
+      }
+    } catch (err) {
+      console.error(err);
+      setPassError('Tizim xatosi yuz berdi.');
     }
   };
 
   // Reset all data
-  const handleResetData = () => {
+  const handleResetData = async () => {
     const doubleConfirmed = window.confirm(
       "DIQQAT: Tizimdagi barcha ma'lumotlarni o'chirib yuborishni xohlaysizmi?\n" +
       "Bu amalni ortga qaytarib bo'lmaydi va barcha qo'shilgan/o'zgartirilgan kanallar o'chib ketadi!"
     );
     
     if (doubleConfirmed) {
-      dataManager.resetAllData();
-      alert("Barcha ma'lumotlar o'chirildi va dastlabki holatga qaytarildi.");
-      window.location.reload();
+      try {
+        await dataManager.resetAllData();
+        alert("Barcha ma'lumotlar o'chirildi va dastlabki holatga qaytarildi.");
+        window.location.reload();
+      } catch (err) {
+        console.error(err);
+        alert("Ma'lumotlarni tozalashda xatolik yuz berdi.");
+      }
     }
   };
 

@@ -1,42 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { dataManager } from '../data/dataManager';
 
 function AdminKatalog() {
-  const [categories, setCategories] = useState(() => dataManager.getCategories());
-  const [items, setItems] = useState(() => dataManager.getItems());
+  const [categories, setCategories] = useState([]);
+  const [items, setItems] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const loadData = () => {
-    setCategories(dataManager.getCategories());
-    setItems(dataManager.getItems());
-  };
+  useEffect(() => {
+    let active = true;
+    const loadCatalogData = async () => {
+      setIsLoading(true);
+      try {
+        const cats = await dataManager.getCategories();
+        const its = await dataManager.getItems();
+        if (active) {
+          setCategories(cats);
+          setItems(its);
+        }
+      } catch (err) {
+        console.error("Failed to load catalog data:", err);
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    };
+    loadCatalogData();
+    return () => { active = false; };
+  }, [refreshTrigger]);
 
-
-  const handleCreateCategory = (e) => {
+  const handleCreateCategory = async (e) => {
     e.preventDefault();
     if (!newCategoryName || !newCategoryName.trim()) {
       setError('Kategoriya nomini kiriting.');
       return;
     }
 
-    const created = dataManager.saveCategory(newCategoryName);
+    setIsLoading(true);
+    const created = await dataManager.saveCategory(newCategoryName);
     if (created) {
       setSuccess('Kategoriya muvaffaqiyatli yaratildi!');
       setError('');
       setNewCategoryName('');
-      loadData();
+      setRefreshTrigger(prev => prev + 1);
       
       // Auto clear success notice
       setTimeout(() => setSuccess(''), 3000);
     } else {
       setError('Ushbu kategoriya allaqachon mavjud.');
       setSuccess('');
+      setIsLoading(false);
     }
   };
 
-  const handleDeleteCategory = (categoryName) => {
+  const handleDeleteCategory = async (categoryName) => {
     if (categoryName === 'Uncategorized') {
       alert('"Uncategorized" kategoriyasini o\'chirib bo\'lmaydi.');
       return;
@@ -50,8 +71,9 @@ function AdminKatalog() {
 
     const confirmed = window.confirm(message);
     if (confirmed) {
-      dataManager.deleteCategory(categoryName);
-      loadData();
+      setIsLoading(true);
+      await dataManager.deleteCategory(categoryName);
+      setRefreshTrigger(prev => prev + 1);
     }
   };
 
@@ -103,7 +125,13 @@ function AdminKatalog() {
                 </tr>
               </thead>
               <tbody>
-                {categories.length > 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="3" className="table-empty">
+                      Yuklanmoqda...
+                    </td>
+                  </tr>
+                ) : categories.length > 0 ? (
                   categories.map((category, idx) => {
                     const itemCount = items.filter(item => item.category === category).length;
                     return (

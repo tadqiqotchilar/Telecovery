@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 const CategoryView = ({ categoryName, items, onBack, onItemClick, onOpenClick }) => {
   // Check if Telegram WebApp BackButton is available

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { dataManager } from '../data/dataManager';
 
 function generateAutoSubtext(type, country, category) {
@@ -45,9 +45,11 @@ function generateAutoSubtext(type, country, category) {
 }
 
 function AdminEcosystem() {
-  const [items, setItems] = useState(() => dataManager.getItems());
-  const [categories, setCategories] = useState(() => dataManager.getCategories());
-  const [countries, setCountries] = useState(() => dataManager.getCountries());
+  const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const countries = dataManager.getCountries();
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,28 +63,40 @@ function AdminEcosystem() {
   // Form Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null); // null means adding
-  const [formData, setFormData] = useState(() => {
-    const cats = dataManager.getCategories();
-    const cns = dataManager.getCountries();
-    return {
-      title: '',
-      username: '',
-      subtext: '',
-      type: 'channel',
-      category: cats[0] || 'Yangiliklar',
-      country: cns[0]?.id || 'uz',
-      link: '',
-      description: '',
-      avatar: ''
-    };
+  const [formData, setFormData] = useState({
+    title: '',
+    username: '',
+    subtext: '',
+    type: 'channel',
+    category: '',
+    country: 'uz',
+    link: '',
+    description: '',
+    avatar: ''
   });
 
-  const loadData = () => {
-    const list = dataManager.getItems();
-    setItems(list);
-    setCategories(dataManager.getCategories());
-    setCountries(dataManager.getCountries());
-  };
+  useEffect(() => {
+    let active = true;
+    const fetchEcosystemData = async () => {
+      setIsLoading(true);
+      try {
+        const list = await dataManager.getItems();
+        const cats = await dataManager.getCategories();
+        if (active) {
+          setItems(list);
+          setCategories(cats);
+        }
+      } catch (err) {
+        console.error("Failed to load admin ecosystem data:", err);
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    };
+    fetchEcosystemData();
+    return () => { active = false; };
+  }, [refreshTrigger]);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -139,24 +153,26 @@ function AdminEcosystem() {
   };
 
   // Handle Delete Click
-  const handleDeleteClick = (id, title) => {
+  const handleDeleteClick = async (id, title) => {
     const confirmed = window.confirm(`"${title}" ni o'chirishni xohlaysizmi?`);
     if (confirmed) {
-      dataManager.deleteItem(id);
-      loadData();
+      setIsLoading(true);
+      await dataManager.deleteItem(id);
+      setRefreshTrigger(prev => prev + 1);
     }
   };
 
   // Handle Submit Form
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const dataToSave = { ...formData };
     if (!dataToSave.id || !dataToSave.subtext) {
       dataToSave.subtext = generateAutoSubtext(dataToSave.type, dataToSave.country, dataToSave.category);
     }
-    dataManager.saveItem(dataToSave);
+    setIsLoading(true);
     setIsModalOpen(false);
-    loadData();
+    await dataManager.saveItem(dataToSave);
+    setRefreshTrigger(prev => prev + 1);
   };
 
   // Filter logic
@@ -312,7 +328,13 @@ function AdminEcosystem() {
               </tr>
             </thead>
             <tbody>
-              {currentItemsSlice.length > 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan="5" className="table-empty">
+                    Yuklanmoqda...
+                  </td>
+                </tr>
+              ) : currentItemsSlice.length > 0 ? (
                 currentItemsSlice.map((item) => {
                   const countryObj = countries.find(c => c.id === item.country);
                   return (

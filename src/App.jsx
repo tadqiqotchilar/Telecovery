@@ -29,6 +29,10 @@ function App() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   
+  // Dynamic items list loaded asynchronously
+  const [clientItems, setClientItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   // Routing & Admin States
   const [route, setRoute] = useState(window.location.hash);
   const [adminTab, setAdminTab] = useState('ecosystem');
@@ -43,6 +47,28 @@ function App() {
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+
+  // Fetch items asynchronously on mount, route change, or country change
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      setIsLoading(true);
+      try {
+        const list = await dataManager.getItems();
+        if (active) {
+          setClientItems(list);
+        }
+      } catch (err) {
+        console.error("Failed to load client items:", err);
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    }
+    load();
+    return () => { active = false; };
+  }, [route, activeCountry]);
 
   useEffect(() => {
     // Initialize Telegram WebApp SDK if running inside Telegram
@@ -102,7 +128,7 @@ function App() {
 
   // Filter items by type and search query
   const getFilteredItems = () => {
-    const countryItems = dataManager.getItems().filter(item => item.country === activeCountry.id);
+    const countryItems = clientItems.filter(item => item.country === activeCountry.id);
     
     return countryItems.filter((item) => {
       // 1. Filter by Tab Type
@@ -124,7 +150,7 @@ function App() {
   // Get related items of the same type and category
   const getRelatedItems = (item) => {
     if (!item) return [];
-    const allItems = dataManager.getItems();
+    const allItems = clientItems;
     const countryItems = allItems.filter(i => i.country === item.country);
     let related = countryItems.filter(i => i.type === item.type);
     
@@ -175,7 +201,7 @@ function App() {
           <main className="app-content-category animate-fade-in">
             <CategoryView
               categoryName={selectedCategory}
-              items={dataManager.getItems().filter(item => item.category === selectedCategory && item.country === activeCountry.id)}
+              items={clientItems.filter(item => item.category === selectedCategory && item.country === activeCountry.id)}
               onBack={() => setSelectedCategory(null)}
               onItemClick={(item) => setSelectedItem(item)}
               onOpenClick={handleOpenItem}
@@ -233,12 +259,19 @@ function App() {
 
             {/* Main Content Area */}
             <main className="app-content">
-              <ChannelList
-                items={filteredItems}
-                onItemClick={(item) => setSelectedItem(item)}
-                onOpenClick={handleOpenItem}
-                onCategoryClick={(cat) => setSelectedCategory(cat)}
-              />
+              {isLoading ? (
+                <div className="client-loading-container">
+                  <div className="client-loading-spinner"></div>
+                  <p>Ma'lumotlar yuklanmoqda...</p>
+                </div>
+              ) : (
+                <ChannelList
+                  items={filteredItems}
+                  onItemClick={(item) => setSelectedItem(item)}
+                  onOpenClick={handleOpenItem}
+                  onCategoryClick={(cat) => setSelectedCategory(cat)}
+                />
+              )}
             </main>
 
             {/* Quick Link to Admin Panel for convenience */}
