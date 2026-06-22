@@ -552,6 +552,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 42px;

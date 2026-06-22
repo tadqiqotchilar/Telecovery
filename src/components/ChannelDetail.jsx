@@ -76,9 +76,13 @@ const ChannelDetail = ({ item, onBack, onOpen, relatedItems, onItemClick, onOpen
         <div className="detail-avatar-container">
           <div
             className="detail-avatar"
-            style={{ background: item.avatarColor }}
+            style={{ background: item.avatar ? 'transparent' : item.avatarColor }}
           >
-            {item.initials}
+            {item.avatar ? (
+              <img src={item.avatar} alt={item.title} className="item-avatar-img" />
+            ) : (
+              item.initials
+            )}
           </div>
         </div>
 
@@ -150,9 +154,13 @@ const ChannelDetail = ({ item, onBack, onOpen, relatedItems, onItemClick, onOpen
                 <div className="item-avatar-container">
                   <div
                     className="item-avatar"
-                    style={{ background: relatedItem.avatarColor }}
+                    style={{ background: relatedItem.avatar ? 'transparent' : relatedItem.avatarColor }}
                   >
-                    {relatedItem.initials}
+                    {relatedItem.avatar ? (
+                      <img src={relatedItem.avatar} alt={relatedItem.title} className="item-avatar-img" />
+                    ) : (
+                      relatedItem.initials
+                    )}
                   </div>
                 </div>
 
