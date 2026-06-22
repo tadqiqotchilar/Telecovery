@@ -43,7 +43,7 @@ function getRandomGradient() {
 }
 
 // Resilient Firebase Fallback State
-let isFirebaseFallbackActive = sessionStorage.getItem('telecovery_firebase_fallback') === 'true';
+let isFirebaseFallbackActive = false;
 
 // Helper to wrap promise with a timeout
 const withTimeout = (promise, ms = 4000) => {
@@ -61,7 +61,6 @@ async function executeFirestore(firestoreAction, localFallbackAction) {
     } catch (err) {
       console.warn("Firestore error or timeout, falling back to localStorage:", err);
       isFirebaseFallbackActive = true;
-      sessionStorage.setItem('telecovery_firebase_fallback', 'true');
     }
   }
   return await localFallbackAction();
