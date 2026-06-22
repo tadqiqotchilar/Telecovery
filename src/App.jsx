@@ -184,6 +184,16 @@ function App() {
   return (
     <div className="app-viewport">
       <div className="app-container">
+        {dataManager.isFallbackActive() && (
+          <div className="client-fallback-banner">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ marginRight: '6px', flexShrink: 0 }}>
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span>Vaqtinchalik Offline (LocalStorage) rejimida ishlamoqda.</span>
+          </div>
+        )}
         {selectedItem ? (
           /* Detail Page View */
           <main className="app-content-detail animate-fade-in">

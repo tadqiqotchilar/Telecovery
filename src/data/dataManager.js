@@ -42,12 +42,41 @@ function getRandomGradient() {
   return AVATAR_GRADIENTS[index];
 }
 
+// Resilient Firebase Fallback State
+let isFirebaseFallbackActive = sessionStorage.getItem('telecovery_firebase_fallback') === 'true';
+
+// Helper to wrap promise with a timeout
+const withTimeout = (promise, ms = 4000) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Firebase Connection Timeout")), ms))
+  ]);
+};
+
+// Resilient executor that falls back to localStorage if Firestore fails or times out
+async function executeFirestore(firestoreAction, localFallbackAction) {
+  if (isFirebaseConfigured && !isFirebaseFallbackActive) {
+    try {
+      return await firestoreAction();
+    } catch (err) {
+      console.warn("Firestore error or timeout, falling back to localStorage:", err);
+      isFirebaseFallbackActive = true;
+      sessionStorage.setItem('telecovery_firebase_fallback', 'true');
+    }
+  }
+  return await localFallbackAction();
+}
+
 export const dataManager = {
+  isFallbackActive() {
+    return isFirebaseFallbackActive;
+  },
+
   async init() {
-    if (isFirebaseConfigured) {
-      try {
+    await executeFirestore(
+      async () => {
         // Check if database is already populated
-        const querySnapshot = await getDocs(collection(db, 'items'));
+        const querySnapshot = await withTimeout(getDocs(collection(db, 'items')), 4000);
         if (querySnapshot.empty) {
           console.log("Firebase Firestore is empty. Seeding default data...");
           
@@ -69,67 +98,64 @@ export const dataManager = {
 
           // Seed items to Firestore
           for (const item of flatItems) {
-            await setDoc(doc(db, 'items', item.id), item);
+            await withTimeout(setDoc(doc(db, 'items', item.id), item), 3000);
           }
 
           // Seed categories to Firestore
           const categoriesList = Array.from(categoriesSet);
           for (const catName of categoriesList) {
-            await setDoc(doc(db, 'categories', catName), { name: catName });
+            await withTimeout(setDoc(doc(db, 'categories', catName), { name: catName }), 3000);
           }
 
           // Seed admin settings
-          await setDoc(doc(db, 'settings', 'admin_config'), { password: 'admin' });
+          await withTimeout(setDoc(doc(db, 'settings', 'admin_config'), { password: 'admin' }), 3000);
           console.log("Firebase Firestore seeding completed successfully!");
         }
-      } catch (err) {
-        console.error("Firestore database seeding failed:", err);
-      }
-    } else {
-      // LocalStorage fallback initialization
-      if (!localStorage.getItem('telecovery_initialized')) {
-        const flatItems = [];
-        const categoriesSet = new Set();
+      },
+      async () => {
+        // LocalStorage fallback initialization
+        if (!localStorage.getItem('telecovery_initialized')) {
+          const flatItems = [];
+          const categoriesSet = new Set();
 
-        Object.keys(itemsData).forEach(countryCode => {
-          itemsData[countryCode].forEach(item => {
-            flatItems.push({
-              ...item,
-              country: countryCode,
-              avatar: ''
+          Object.keys(itemsData).forEach(countryCode => {
+            itemsData[countryCode].forEach(item => {
+              flatItems.push({
+                ...item,
+                country: countryCode,
+                avatar: ''
+              });
+              if (item.category) {
+                categoriesSet.add(item.category);
+              }
             });
-            if (item.category) {
-              categoriesSet.add(item.category);
-            }
           });
-        });
 
-        localStorage.setItem('telecovery_items', JSON.stringify(flatItems));
-        localStorage.setItem('telecovery_categories', JSON.stringify(Array.from(categoriesSet)));
-        localStorage.setItem('telecovery_admin_password', 'admin');
-        localStorage.setItem('telecovery_initialized', 'true');
+          localStorage.setItem('telecovery_items', JSON.stringify(flatItems));
+          localStorage.setItem('telecovery_categories', JSON.stringify(Array.from(categoriesSet)));
+          localStorage.setItem('telecovery_admin_password', 'admin');
+          localStorage.setItem('telecovery_initialized', 'true');
+        }
       }
-    }
+    );
   },
 
   // Get all items
   async getItems() {
     await this.init();
-    if (isFirebaseConfigured) {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'items'));
+    return executeFirestore(
+      async () => {
+        const querySnapshot = await withTimeout(getDocs(collection(db, 'items')), 4000);
         const items = [];
         querySnapshot.forEach(d => {
           items.push({ id: d.id, ...d.data() });
         });
         return items;
-      } catch (err) {
-        console.error("Error loading items from Firestore:", err);
-        return [];
+      },
+      async () => {
+        return JSON.parse(localStorage.getItem('telecovery_items') || '[]');
       }
-    } else {
-      return JSON.parse(localStorage.getItem('telecovery_items') || '[]');
-    }
+    );
   },
 
   async getItemsByCountry(countryCode) {
@@ -152,8 +178,8 @@ export const dataManager = {
       formattedLink = 'https://' + formattedLink;
     }
 
-    if (isFirebaseConfigured) {
-      try {
+    return executeFirestore(
+      async () => {
         let finalItem = { ...item, username: formattedUsername, link: formattedLink };
         if (!item.id) {
           // Add mode
@@ -167,75 +193,71 @@ export const dataManager = {
           finalItem.initials = getInitials(item.title);
         }
         
-        await setDoc(doc(db, 'items', finalItem.id), finalItem);
+        await withTimeout(setDoc(doc(db, 'items', finalItem.id), finalItem), 4000);
         return true;
-      } catch (err) {
-        console.error("Error saving item to Firestore:", err);
-        return false;
-      }
-    } else {
-      const items = await this.getItems();
-      if (item.id) {
-        // Edit mode
-        const index = items.findIndex(i => i.id === item.id);
-        if (index !== -1) {
-          const currentItem = items[index];
-          const initials = currentItem.title === item.title ? currentItem.initials : getInitials(item.title);
+      },
+      async () => {
+        const items = JSON.parse(localStorage.getItem('telecovery_items') || '[]');
+        if (item.id) {
+          // Edit mode
+          const index = items.findIndex(i => i.id === item.id);
+          if (index !== -1) {
+            const currentItem = items[index];
+            const initials = currentItem.title === item.title ? currentItem.initials : getInitials(item.title);
+            
+            items[index] = {
+              ...currentItem,
+              ...item,
+              username: formattedUsername,
+              link: formattedLink,
+              initials
+            };
+          }
+        } else {
+          // Add mode
+          const newId = `${item.country}_${item.type.substring(0, 2)}_${Date.now()}`;
+          const initials = getInitials(item.title);
+          const avatarColor = getRandomGradient();
           
-          items[index] = {
-            ...currentItem,
+          items.push({
             ...item,
+            id: newId,
             username: formattedUsername,
             link: formattedLink,
-            initials
-          };
+            initials,
+            avatarColor,
+            avatar: item.avatar || ''
+          });
         }
-      } else {
-        // Add mode
-        const newId = `${item.country}_${item.type.substring(0, 2)}_${Date.now()}`;
-        const initials = getInitials(item.title);
-        const avatarColor = getRandomGradient();
-        
-        items.push({
-          ...item,
-          id: newId,
-          username: formattedUsername,
-          link: formattedLink,
-          initials,
-          avatarColor,
-          avatar: item.avatar || ''
-        });
+        localStorage.setItem('telecovery_items', JSON.stringify(items));
+        return true;
       }
-      localStorage.setItem('telecovery_items', JSON.stringify(items));
-      return true;
-    }
+    );
   },
 
   // Delete Item
   async deleteItem(id) {
     await this.init();
-    if (isFirebaseConfigured) {
-      try {
-        await deleteDoc(doc(db, 'items', id));
+    return executeFirestore(
+      async () => {
+        await withTimeout(deleteDoc(doc(db, 'items', id)), 4000);
         return true;
-      } catch (err) {
-        console.error("Error deleting item from Firestore:", err);
-        return false;
+      },
+      async () => {
+        const items = JSON.parse(localStorage.getItem('telecovery_items') || '[]');
+        const filteredItems = items.filter(i => i.id !== id);
+        localStorage.setItem('telecovery_items', JSON.stringify(filteredItems));
+        return true;
       }
-    } else {
-      const items = await this.getItems();
-      const filteredItems = items.filter(i => i.id !== id);
-      localStorage.setItem('telecovery_items', JSON.stringify(filteredItems));
-      return true;
-    }
+    );
   },
 
   // Get categories list
   async getCategories() {
     await this.init();
-    if (isFirebaseConfigured) {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'categories'));
+    return executeFirestore(
+      async () => {
+        const querySnapshot = await withTimeout(getDocs(collection(db, 'categories')), 4000);
         const categories = [];
         querySnapshot.forEach(d => {
           categories.push(d.id); // Firestore Document ID is category name
@@ -246,13 +268,11 @@ export const dataManager = {
           categories.push('Uncategorized');
         }
         return categories;
-      } catch (err) {
-        console.error("Error loading categories from Firestore:", err);
-        return ['Uncategorized'];
+      },
+      async () => {
+        return JSON.parse(localStorage.getItem('telecovery_categories') || '[]');
       }
-    } else {
-      return JSON.parse(localStorage.getItem('telecovery_categories') || '[]');
-    }
+    );
   },
 
   // Create dynamic Category
@@ -263,19 +283,17 @@ export const dataManager = {
     const categories = await this.getCategories();
     if (categories.includes(trimmed)) return false;
 
-    if (isFirebaseConfigured) {
-      try {
-        await setDoc(doc(db, 'categories', trimmed), { name: trimmed });
+    return executeFirestore(
+      async () => {
+        await withTimeout(setDoc(doc(db, 'categories', trimmed), { name: trimmed }), 4000);
         return true;
-      } catch (err) {
-        console.error("Error saving category to Firestore:", err);
-        return false;
+      },
+      async () => {
+        categories.push(trimmed);
+        localStorage.setItem('telecovery_categories', JSON.stringify(categories));
+        return true;
       }
-    } else {
-      categories.push(trimmed);
-      localStorage.setItem('telecovery_categories', JSON.stringify(categories));
-      return true;
-    }
+    );
   },
 
   // Delete dynamic Category
@@ -283,65 +301,61 @@ export const dataManager = {
     await this.init();
     if (categoryName === 'Uncategorized') return false;
 
-    if (isFirebaseConfigured) {
-      try {
+    return executeFirestore(
+      async () => {
         // 1. Delete category document
-        await deleteDoc(doc(db, 'categories', categoryName));
+        await withTimeout(deleteDoc(doc(db, 'categories', categoryName)), 4000);
         
         // 2. Set all items belonging to this category to Uncategorized
         const items = await this.getItems();
         for (const item of items) {
           if (item.category === categoryName) {
             const itemRef = doc(db, 'items', item.id);
-            await updateDoc(itemRef, { category: 'Uncategorized' });
+            await withTimeout(updateDoc(itemRef, { category: 'Uncategorized' }), 3000);
           }
         }
         return true;
-      } catch (err) {
-        console.error("Error deleting category from Firestore:", err);
-        return false;
-      }
-    } else {
-      const categories = await this.getCategories();
-      const filteredCategories = categories.filter(c => c !== categoryName);
-      localStorage.setItem('telecovery_categories', JSON.stringify(filteredCategories));
-      
-      const items = await this.getItems();
-      const updatedItems = items.map(item => {
-        if (item.category === categoryName) {
-          return { ...item, category: 'Uncategorized' };
+      },
+      async () => {
+        const categories = await this.getCategories();
+        const filteredCategories = categories.filter(c => c !== categoryName);
+        localStorage.setItem('telecovery_categories', JSON.stringify(filteredCategories));
+        
+        const items = await this.getItems();
+        const updatedItems = items.map(item => {
+          if (item.category === categoryName) {
+            return { ...item, category: 'Uncategorized' };
+          }
+          return item;
+        });
+        localStorage.setItem('telecovery_items', JSON.stringify(updatedItems));
+        
+        const cats = await this.getCategories();
+        if (!cats.includes('Uncategorized')) {
+          await this.saveCategory('Uncategorized');
         }
-        return item;
-      });
-      localStorage.setItem('telecovery_items', JSON.stringify(updatedItems));
-      
-      const cats = await this.getCategories();
-      if (!cats.includes('Uncategorized')) {
-        await this.saveCategory('Uncategorized');
+        return true;
       }
-      return true;
-    }
+    );
   },
 
   // Password administration
   async checkPassword(password) {
     await this.init();
-    if (isFirebaseConfigured) {
-      try {
+    return executeFirestore(
+      async () => {
         const docRef = doc(db, 'settings', 'admin_config');
-        const docSnap = await getDoc(docRef);
+        const docSnap = await withTimeout(getDoc(docRef), 4000);
         if (docSnap.exists()) {
           return docSnap.data().password === password;
         }
         return password === 'admin';
-      } catch (err) {
-        console.error("Error checking password from Firestore:", err);
-        return password === 'admin';
+      },
+      async () => {
+        const storedPassword = localStorage.getItem('telecovery_admin_password') || 'admin';
+        return storedPassword === password;
       }
-    } else {
-      const storedPassword = localStorage.getItem('telecovery_admin_password') || 'admin';
-      return storedPassword === password;
-    }
+    );
   },
 
   async updatePassword(newPassword) {
@@ -349,54 +363,50 @@ export const dataManager = {
     if (!newPassword || newPassword.trim().length < 4) return false;
     const cleanPass = newPassword.trim();
 
-    if (isFirebaseConfigured) {
-      try {
+    return executeFirestore(
+      async () => {
         const docRef = doc(db, 'settings', 'admin_config');
-        await setDoc(docRef, { password: cleanPass }, { merge: true });
+        await withTimeout(setDoc(docRef, { password: cleanPass }, { merge: true }), 4000);
         return true;
-      } catch (err) {
-        console.error("Error updating password in Firestore:", err);
-        return false;
+      },
+      async () => {
+        localStorage.setItem('telecovery_admin_password', cleanPass);
+        return true;
       }
-    } else {
-      localStorage.setItem('telecovery_admin_password', cleanPass);
-      return true;
-    }
+    );
   },
 
   async resetAllData() {
-    if (isFirebaseConfigured) {
-      try {
+    return executeFirestore(
+      async () => {
         // Delete all items
-        const itemsSnapshot = await getDocs(collection(db, 'items'));
+        const itemsSnapshot = await withTimeout(getDocs(collection(db, 'items')), 4000);
         for (const document of itemsSnapshot.docs) {
-          await deleteDoc(doc(db, 'items', document.id));
+          await withTimeout(deleteDoc(doc(db, 'items', document.id)), 3000);
         }
 
         // Delete all categories
-        const catsSnapshot = await getDocs(collection(db, 'categories'));
+        const catsSnapshot = await withTimeout(getDocs(collection(db, 'categories')), 4000);
         for (const document of catsSnapshot.docs) {
-          await deleteDoc(doc(db, 'categories', document.id));
+          await withTimeout(deleteDoc(doc(db, 'categories', document.id)), 3000);
         }
 
         // Delete settings document
-        await deleteDoc(doc(db, 'settings', 'admin_config'));
+        await withTimeout(deleteDoc(doc(db, 'settings', 'admin_config')), 3000);
         
         // Seeding will re-run automatically on next initialization
         await this.init();
         return true;
-      } catch (err) {
-        console.error("Error resetting Firestore data:", err);
-        return false;
+      },
+      async () => {
+        localStorage.removeItem('telecovery_initialized');
+        localStorage.removeItem('telecovery_items');
+        localStorage.removeItem('telecovery_categories');
+        localStorage.removeItem('telecovery_admin_password');
+        await this.init();
+        return true;
       }
-    } else {
-      localStorage.removeItem('telecovery_initialized');
-      localStorage.removeItem('telecovery_items');
-      localStorage.removeItem('telecovery_categories');
-      localStorage.removeItem('telecovery_admin_password');
-      await this.init();
-      return true;
-    }
+    );
   },
 
   isAdminLoggedIn() {
