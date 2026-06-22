@@ -75,10 +75,12 @@ export const dataManager = {
   async init() {
     await executeFirestore(
       async () => {
-        // Check if database is already populated
-        const querySnapshot = await withTimeout(getDocs(collection(db, 'items')), 4000);
-        if (querySnapshot.empty) {
-          console.log("Firebase Firestore is empty. Seeding default data...");
+        // Check if database was already seeded
+        const configSnap = await withTimeout(getDoc(doc(db, 'settings', 'admin_config')), 4000);
+        const alreadySeeded = configSnap.exists() && configSnap.data().seeded;
+
+        if (!alreadySeeded) {
+          console.log("Firebase Firestore is not seeded. Seeding default data...");
           
           const flatItems = [];
           const categoriesSet = new Set();
@@ -108,7 +110,7 @@ export const dataManager = {
           }
 
           // Seed admin settings
-          await withTimeout(setDoc(doc(db, 'settings', 'admin_config'), { password: 'admin' }), 3000);
+          await withTimeout(setDoc(doc(db, 'settings', 'admin_config'), { password: 'admin', seeded: true }), 3000);
           console.log("Firebase Firestore seeding completed successfully!");
         }
       },
@@ -391,11 +393,8 @@ export const dataManager = {
           await withTimeout(deleteDoc(doc(db, 'categories', document.id)), 3000);
         }
 
-        // Delete settings document
-        await withTimeout(deleteDoc(doc(db, 'settings', 'admin_config')), 3000);
-        
-        // Seeding will re-run automatically on next initialization
-        await this.init();
+        // Keep settings document but set password to 'admin' and keep seeded: true
+        await withTimeout(setDoc(doc(db, 'settings', 'admin_config'), { password: 'admin', seeded: true }), 3000);
         return true;
       },
       async () => {
@@ -403,7 +402,11 @@ export const dataManager = {
         localStorage.removeItem('telecovery_items');
         localStorage.removeItem('telecovery_categories');
         localStorage.removeItem('telecovery_admin_password');
-        await this.init();
+        // Seed flag for localStorage fallback
+        localStorage.setItem('telecovery_initialized', 'true');
+        localStorage.setItem('telecovery_items', JSON.stringify([]));
+        localStorage.setItem('telecovery_categories', JSON.stringify([]));
+        localStorage.setItem('telecovery_admin_password', 'admin');
         return true;
       }
     );
