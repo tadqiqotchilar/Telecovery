@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const ChannelDetail = ({ item, onBack, onOpen, relatedItems, onItemClick, onOpenClick }) => {
+const ChannelDetail = ({ item, onBack, onOpen, relatedItems, onItemClick, onOpenClick, onCategoryClick }) => {
   const [showToast, setShowToast] = useState(false);
 
   // Check if Telegram WebApp BackButton is available
@@ -127,7 +127,7 @@ const ChannelDetail = ({ item, onBack, onOpen, relatedItems, onItemClick, onOpen
         <div className="related-items-section">
           <hr className="detail-divider" style={{ marginTop: '30px' }} />
           
-          <div className="category-header">
+          <div className="category-header" onClick={() => onCategoryClick && onCategoryClick(item.category)}>
             <h2 className="category-title">{getRelatedSectionTitle()}</h2>
             <svg
               className="chevron-right"

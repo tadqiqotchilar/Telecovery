@@ -204,6 +204,10 @@ function App() {
               relatedItems={getRelatedItems(selectedItem)}
               onItemClick={(item) => setSelectedItem(item)}
               onOpenClick={handleOpenItem}
+              onCategoryClick={(categoryName) => {
+                setSelectedCategory(categoryName);
+                setSelectedItem(null);
+              }}
             />
           </main>
         ) : selectedCategory ? (
