@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { dataManager } from '../data/dataManager';
 import CountryFlag from './CountryFlag';
 
@@ -48,7 +48,7 @@ function generateAutoSubtext(type, country, category) {
 function AdminEcosystem() {
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
-  const countries = dataManager.getCountries();
+  const [countries, setCountries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   
@@ -76,6 +76,21 @@ function AdminEcosystem() {
     avatar: ''
   });
 
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const countrySelectRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (countrySelectRef.current && !countrySelectRef.current.contains(event.target)) {
+        setIsCountryDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   useEffect(() => {
     let active = true;
     const fetchEcosystemData = async () => {
@@ -83,9 +98,11 @@ function AdminEcosystem() {
       try {
         const list = await dataManager.getItems();
         const cats = await dataManager.getCategories();
+        const cnts = await dataManager.getCountries();
         if (active) {
           setItems(list);
           setCategories(cats);
+          setCountries(cnts);
         }
       } catch (err) {
         console.error("Failed to load admin ecosystem data:", err);
@@ -203,6 +220,8 @@ function AdminEcosystem() {
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
+
+  const selectedCountryObj = countries.find(c => c.id === formData.country);
 
   // Stats
   const totalCount = items.length;
@@ -548,16 +567,68 @@ function AdminEcosystem() {
 
                 <div className="form-group">
                   <label>Mamlakat *</label>
-                  <select
-                    value={formData.country}
-                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  >
-                    {countries.map(c => (
-                      <option key={c.id} value={c.id}>
-                        {c.id.toUpperCase()} - {c.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="custom-select-container" ref={countrySelectRef}>
+                    <button
+                      type="button"
+                      className={`custom-select-trigger ${isCountryDropdownOpen ? 'open' : ''}`}
+                      onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                    >
+                      <span className="custom-select-trigger-content">
+                        {selectedCountryObj ? (
+                          <>
+                            <span style={{ display: 'flex', alignItems: 'center' }}>
+                              <CountryFlag countryId={selectedCountryObj.id} style={{ width: '20px', height: '14px' }} />
+                            </span>
+                            <span>{selectedCountryObj.name} ({selectedCountryObj.id.toUpperCase()})</span>
+                          </>
+                        ) : (
+                          <span style={{ color: '#94a3b8' }}>Mamlakatni tanlang</span>
+                        )}
+                      </span>
+                      <svg
+                        className={`custom-select-chevron ${isCountryDropdownOpen ? 'open' : ''}`}
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </button>
+                    
+                    {isCountryDropdownOpen && (
+                      <div className="custom-select-dropdown" style={{ top: '100%', maxHeight: '200px' }}>
+                        <div className="custom-select-options-list">
+                          {countries.map((c) => {
+                            const isSelected = c.id === formData.country;
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                className={`custom-select-option ${isSelected ? 'selected' : ''}`}
+                                onClick={() => {
+                                  setFormData({ ...formData, country: c.id });
+                                  setIsCountryDropdownOpen(false);
+                                }}
+                              >
+                                <span className="custom-select-option-content">
+                                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                                    <CountryFlag countryId={c.id} style={{ width: '20px', height: '14px' }} />
+                                  </span>
+                                  <span>{c.name}</span>
+                                </span>
+                                <span style={{ fontSize: '11px', color: isSelected ? 'inherit' : '#94a3b8', textTransform: 'uppercase', fontFamily: 'monospace' }}>
+                                  {c.id}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
 

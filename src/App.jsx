@@ -12,6 +12,7 @@ import AdminLogin from './components/AdminLogin';
 import AdminLayout from './components/AdminLayout';
 import AdminEcosystem from './components/AdminEcosystem';
 import AdminKatalog from './components/AdminKatalog';
+import AdminCountries from './components/AdminCountries';
 import AdminSettings from './components/AdminSettings';
 
 import './App.css';
@@ -21,8 +22,8 @@ dataManager.init();
 
 function App() {
   // Client States
-  const countries = dataManager.getCountries();
-  const [activeCountry, setActiveCountry] = useState(countries[0]);
+  const [countries, setCountries] = useState([]);
+  const [activeCountry, setActiveCountry] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
   const [isCountrySelectorOpen, setIsCountrySelectorOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,6 +49,31 @@ function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  // Watch for dynamic countries list changes
+  useEffect(() => {
+    let active = true;
+    async function loadCountries() {
+      try {
+        const list = await dataManager.getCountries();
+        if (active) {
+          setCountries(list);
+          if (list.length > 0) {
+            setActiveCountry(prev => {
+              if (prev && list.some(c => c.id === prev.id)) {
+                return list.find(c => c.id === prev.id);
+              }
+              return list[0];
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load countries in App:", err);
+      }
+    }
+    loadCountries();
+    return () => { active = false; };
+  }, [route]);
+  
   // Fetch items asynchronously on mount, route change, or country change
   useEffect(() => {
     let active = true;
@@ -57,6 +83,30 @@ function App() {
         const list = await dataManager.getItems();
         if (active) {
           setClientItems(list);
+          
+          // Asynchronously update real-time subscriber/member counts in the background
+          (async () => {
+            const targets = list.filter(item => 
+              (item.type === 'channel' || item.type === 'group') && item.username
+            );
+            for (const item of targets) {
+              if (!active) break;
+              try {
+                const realCount = await dataManager.fetchTelegramStats(item.username);
+                if (realCount && realCount !== item.subtext) {
+                  await dataManager.updateItemSubtext(item.id, realCount);
+                  if (active) {
+                    setClientItems(prev => prev.map(i => i.id === item.id ? { ...i, subtext: realCount } : i));
+                    setSelectedItem(prev => prev && prev.id === item.id ? { ...prev, subtext: realCount } : prev);
+                  }
+                }
+              } catch (err) {
+                console.warn(`Failed background update for ${item.username}:`, err);
+              }
+              // Wait 400ms to avoid overwhelming proxy servers
+              await new Promise(r => setTimeout(r, 400));
+            }
+          })();
         }
       } catch (err) {
         console.error("Failed to load client items:", err);
@@ -128,6 +178,7 @@ function App() {
 
   // Filter items by type and search query
   const getFilteredItems = () => {
+    if (!activeCountry) return [];
     const countryItems = clientItems.filter(item => item.country === activeCountry.id);
     
     return countryItems.filter((item) => {
@@ -173,6 +224,7 @@ function App() {
       <AdminLayout activeTab={adminTab} onTabChange={setAdminTab}>
         {adminTab === 'ecosystem' && <AdminEcosystem />}
         {adminTab === 'katalog' && <AdminKatalog />}
+        {adminTab === 'mamlakatlar' && <AdminCountries />}
         {adminTab === 'sozlamalar' && (
           <AdminSettings onLogout={() => setIsAdminLoggedIn(false)} />
         )}
@@ -181,6 +233,15 @@ function App() {
   }
 
   // Client view (Telegram Mini App)
+  if (countries.length === 0 || !activeCountry) {
+    return (
+      <div className="client-loading-container">
+        <div className="client-loading-spinner"></div>
+        <p>Ma'lumotlar yuklanmoqda...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="app-viewport">
       <div className="app-container">
@@ -215,7 +276,7 @@ function App() {
           <main className="app-content-category animate-fade-in">
             <CategoryView
               categoryName={selectedCategory}
-              items={clientItems.filter(item => item.category === selectedCategory && item.country === activeCountry.id)}
+              items={clientItems.filter(item => item.category === selectedCategory && activeCountry && item.country === activeCountry.id)}
               onBack={() => setSelectedCategory(null)}
               onItemClick={(item) => setSelectedItem(item)}
               onOpenClick={handleOpenItem}

@@ -1,4 +1,4 @@
-import { countries, itemsData } from './channelsData';
+import { countries as defaultCountries, itemsData } from './channelsData';
 import { db, isFirebaseConfigured } from './firebase';
 import { 
   collection, 
@@ -112,6 +112,15 @@ export const dataManager = {
           await withTimeout(setDoc(doc(db, 'settings', 'admin_config'), { password: 'admin', seeded: true }), 3000);
           console.log("Firebase Firestore seeding completed successfully!");
         }
+
+        // Backwards-compatible countries seeding for Firestore
+        const countriesSnap = await withTimeout(getDocs(collection(db, 'countries')), 4000);
+        if (countriesSnap.empty) {
+          console.log("Firestore countries empty. Seeding default countries...");
+          for (const c of defaultCountries) {
+            await withTimeout(setDoc(doc(db, 'countries', c.id), c), 3000);
+          }
+        }
       },
       async () => {
         // LocalStorage fallback initialization
@@ -137,6 +146,11 @@ export const dataManager = {
           localStorage.setItem('telecovery_admin_password', 'admin');
           localStorage.setItem('telecovery_initialized', 'true');
         }
+
+        // Ensure countries exist in localStorage (backwards-compatible)
+        if (!localStorage.getItem('telecovery_countries')) {
+          localStorage.setItem('telecovery_countries', JSON.stringify(defaultCountries));
+        }
       }
     );
   },
@@ -151,10 +165,11 @@ export const dataManager = {
         querySnapshot.forEach(d => {
           items.push({ id: d.id, ...d.data() });
         });
-        return items;
+        return items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       },
       async () => {
-        return JSON.parse(localStorage.getItem('telecovery_items') || '[]');
+        const items = JSON.parse(localStorage.getItem('telecovery_items') || '[]');
+        return items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       }
     );
   },
@@ -189,6 +204,7 @@ export const dataManager = {
           finalItem.initials = getInitials(item.title);
           finalItem.avatarColor = getRandomGradient();
           finalItem.avatar = item.avatar || '';
+          finalItem.createdAt = Date.now();
         } else {
           // Edit mode: re-calculate initials if title changes
           finalItem.initials = getInitials(item.title);
@@ -227,7 +243,8 @@ export const dataManager = {
             link: formattedLink,
             initials,
             avatarColor,
-            avatar: item.avatar || ''
+            avatar: item.avatar || '',
+            createdAt: Date.now()
           });
         }
         localStorage.setItem('telecovery_items', JSON.stringify(items));
@@ -423,7 +440,144 @@ export const dataManager = {
     sessionStorage.removeItem('telecovery_admin_logged');
   },
 
-  getCountries() {
-    return countries;
+  async fetchTelegramStats(username) {
+    if (!username) return null;
+    const cleanUsername = username.replace('@', '').trim();
+    if (!cleanUsername) return null;
+    const url = `https://t.me/s/${cleanUsername}`;
+    
+    const proxies = [
+      (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+      (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`
+    ];
+    
+    for (const proxyFn of proxies) {
+      try {
+        const proxyUrl = proxyFn(url);
+        const res = await fetch(proxyUrl);
+        if (!res.ok) continue;
+        
+        let html = '';
+        if (proxyUrl.includes('allorigins')) {
+          const json = await res.json();
+          html = json.contents || '';
+        } else {
+          html = await res.text();
+        }
+        
+        if (!html) continue;
+        
+        const match = html.match(/class="tgme_header_counter"[^>]*>([^<]+)/);
+        if (match && match[1]) {
+          let countText = match[1].trim();
+          
+          // Format spaces between numbers to commas (e.g. "269 121" -> "269,121")
+          countText = countText.replace(/(\d)\s+(\d)/g, '$1,$2');
+          
+          // Translate to Uzbek
+          countText = countText
+            .replace(/subscribers/i, 'obunachi')
+            .replace(/subscriber/i, 'obunachi')
+            .replace(/members/i, "a'zo")
+            .replace(/member/i, "a'zo");
+          return countText;
+        }
+      } catch (err) {
+        console.warn(`Failed to fetch stats for ${cleanUsername} via proxy:`, err);
+      }
+    }
+    return null;
+  },
+
+  async updateItemSubtext(id, subtext) {
+    return executeFirestore(
+      async () => {
+        const itemRef = doc(db, 'items', id);
+        await withTimeout(updateDoc(itemRef, { subtext }), 3000);
+        return true;
+      },
+      async () => {
+        const items = JSON.parse(localStorage.getItem('telecovery_items') || '[]');
+        const index = items.findIndex(i => i.id === id);
+        if (index !== -1) {
+          items[index].subtext = subtext;
+          localStorage.setItem('telecovery_items', JSON.stringify(items));
+        }
+        return true;
+      }
+    );
+  },
+
+  async getCountries() {
+    await this.init();
+    return executeFirestore(
+      async () => {
+        const querySnapshot = await withTimeout(getDocs(collection(db, 'countries')), 4000);
+        const list = [];
+        querySnapshot.forEach(d => {
+          list.push({ id: d.id, ...d.data() });
+        });
+        return list;
+      },
+      async () => {
+        return JSON.parse(localStorage.getItem('telecovery_countries') || '[]');
+      }
+    );
+  },
+
+  async saveCountry(country) {
+    await this.init();
+    if (!country.id || !country.name || !country.flag) return false;
+    const cleanId = country.id.trim().toLowerCase();
+    const cleanName = country.name.trim();
+    const cleanFlag = country.flag.trim();
+    const cleanNativeName = (country.nativeName || country.name).trim();
+    const countryData = { id: cleanId, name: cleanName, flag: cleanFlag, nativeName: cleanNativeName };
+
+    return executeFirestore(
+      async () => {
+        await withTimeout(setDoc(doc(db, 'countries', cleanId), countryData), 4000);
+        return true;
+      },
+      async () => {
+        const list = JSON.parse(localStorage.getItem('telecovery_countries') || '[]');
+        const existingIdx = list.findIndex(c => c.id === cleanId);
+        if (existingIdx !== -1) {
+          list[existingIdx] = countryData;
+        } else {
+          list.push(countryData);
+        }
+        localStorage.setItem('telecovery_countries', JSON.stringify(list));
+        return true;
+      }
+    );
+  },
+
+  async deleteCountry(countryId) {
+    await this.init();
+    return executeFirestore(
+      async () => {
+        await withTimeout(deleteDoc(doc(db, 'countries', countryId)), 4000);
+        
+        // Cascade delete items in this country
+        const items = await this.getItems();
+        for (const item of items) {
+          if (item.country === countryId) {
+            await withTimeout(deleteDoc(doc(db, 'items', item.id)), 3000);
+          }
+        }
+        return true;
+      },
+      async () => {
+        const list = JSON.parse(localStorage.getItem('telecovery_countries') || '[]');
+        const filteredList = list.filter(c => c.id !== countryId);
+        localStorage.setItem('telecovery_countries', JSON.stringify(filteredList));
+        
+        const items = JSON.parse(localStorage.getItem('telecovery_items') || '[]');
+        const filteredItems = items.filter(item => item.country !== countryId);
+        localStorage.setItem('telecovery_items', JSON.stringify(filteredItems));
+        return true;
+      }
+    );
   }
 };
