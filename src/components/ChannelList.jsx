@@ -45,7 +45,7 @@ const ChannelList = ({ items, onItemClick, onOpenClick, onCategoryClick }) => {
 
           {/* List of items in this category */}
           <div className="category-items">
-            {categoryItems.map((item) => (
+            {categoryItems.slice(0, 3).map((item) => (
               <div
                 key={item.id}
                 className="list-item"
