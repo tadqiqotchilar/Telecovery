@@ -77,12 +77,17 @@ function AdminEcosystem() {
   });
 
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const [isFilterCountryDropdownOpen, setIsFilterCountryDropdownOpen] = useState(false);
   const countrySelectRef = useRef(null);
+  const filterCountrySelectRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(event) {
       if (countrySelectRef.current && !countrySelectRef.current.contains(event.target)) {
         setIsCountryDropdownOpen(false);
+      }
+      if (filterCountrySelectRef.current && !filterCountrySelectRef.current.contains(event.target)) {
+        setIsFilterCountryDropdownOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -306,21 +311,93 @@ function AdminEcosystem() {
               </select>
             </div>
 
-            <div className="select-dropdown-wrapper">
-              <select
-                value={selectedCountry}
-                onChange={(e) => {
-                  setSelectedCountry(e.target.value);
-                  setCurrentPage(1);
-                }}
+            <div className="custom-select-container" ref={filterCountrySelectRef} style={{ width: '220px' }}>
+              <button
+                type="button"
+                className={`custom-select-trigger ${isFilterCountryDropdownOpen ? 'open' : ''}`}
+                onClick={() => setIsFilterCountryDropdownOpen(!isFilterCountryDropdownOpen)}
+                style={{ padding: '8px 12px', fontSize: '13px' }}
               >
-                <option value="all">Barcha Davlatlar</option>
-                {countries.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.id.toUpperCase()} - {c.name}
-                  </option>
-                ))}
-              </select>
+                <span className="custom-select-trigger-content">
+                  {selectedCountry === 'all' ? (
+                    <>
+                      <span>🌐</span>
+                      <span>Barcha Davlatlar</span>
+                    </>
+                  ) : (
+                    (() => {
+                      const matched = countries.find(c => c.id === selectedCountry);
+                      return matched ? (
+                        <>
+                          <span style={{ display: 'flex', alignItems: 'center' }}>
+                            <CountryFlag countryId={matched.id} style={{ width: '18px', height: '12px' }} />
+                          </span>
+                          <span>{matched.name}</span>
+                        </>
+                      ) : (
+                        <span>{selectedCountry.toUpperCase()}</span>
+                      );
+                    })()
+                  )}
+                </span>
+                <svg
+                  className={`custom-select-chevron ${isFilterCountryDropdownOpen ? 'open' : ''}`}
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+              
+              {isFilterCountryDropdownOpen && (
+                <div className="custom-select-dropdown" style={{ top: '100%', maxHeight: '250px', width: '240px', right: 0, left: 'auto' }}>
+                  <div className="custom-select-options-list">
+                    <button
+                      type="button"
+                      className={`custom-select-option ${selectedCountry === 'all' ? 'selected' : ''}`}
+                      onClick={() => {
+                        setSelectedCountry('all');
+                        setCurrentPage(1);
+                        setIsFilterCountryDropdownOpen(false);
+                      }}
+                    >
+                      <span className="custom-select-option-content">
+                        <span>🌐</span>
+                        <span>Barcha Davlatlar</span>
+                      </span>
+                    </button>
+                    {countries.map((c) => {
+                      const isSelected = c.id === selectedCountry;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          className={`custom-select-option ${isSelected ? 'selected' : ''}`}
+                          onClick={() => {
+                            setSelectedCountry(c.id);
+                            setCurrentPage(1);
+                            setIsFilterCountryDropdownOpen(false);
+                          }}
+                        >
+                          <span className="custom-select-option-content">
+                            <span style={{ display: 'flex', alignItems: 'center' }}>
+                              <CountryFlag countryId={c.id} style={{ width: '18px', height: '12px' }} />
+                            </span>
+                            <span>{c.name}</span>
+                          </span>
+                          <span style={{ fontSize: '11px', color: isSelected ? 'inherit' : '#94a3b8', textTransform: 'uppercase', fontFamily: 'monospace' }}>
+                            {c.id}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             <button className="add-btn" onClick={handleAddClick}>
