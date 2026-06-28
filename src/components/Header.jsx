@@ -1,10 +1,14 @@
 
+import CountryFlag from './CountryFlag';
+
 const Header = ({ selectedCountry, onSelectorClick }) => {
   return (
     <header className="app-header">
       <h1 className="logo">Telecovery.</h1>
       <button className="country-selector-btn" onClick={onSelectorClick}>
-        <span className="flag">{selectedCountry.flag}</span>
+        <span className="flag" style={{ display: 'flex', alignItems: 'center' }}>
+          <CountryFlag countryId={selectedCountry.id} />
+        </span>
         <span className="country-name">{selectedCountry.nativeName}</span>
         <svg
           className="chevron-down"

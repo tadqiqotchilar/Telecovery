@@ -1,5 +1,7 @@
 
 
+import CountryFlag from './CountryFlag';
+
 const CountrySelector = ({ isOpen, onClose, countries, selectedCountry, onSelect }) => {
   return (
     <div className={`bottom-sheet-overlay ${isOpen ? 'open' : ''}`} onClick={onClose}>
@@ -16,7 +18,7 @@ const CountrySelector = ({ isOpen, onClose, countries, selectedCountry, onSelect
             </svg>
           </button>
         </div>
-
+ 
         <div className="country-list">
           {countries.map((country) => {
             const isSelected = country.id === selectedCountry.id;
@@ -30,7 +32,9 @@ const CountrySelector = ({ isOpen, onClose, countries, selectedCountry, onSelect
                 }}
               >
                 <div className="country-info">
-                  <span className="country-flag-large">{country.flag}</span>
+                  <span className="country-flag-large" style={{ display: 'flex', alignItems: 'center' }}>
+                    <CountryFlag countryId={country.id} style={{ width: '28px', height: '18px' }} />
+                  </span>
                   <div className="country-names">
                     <span className="country-native">{country.nativeName}</span>
                     <span className="country-english">{country.name}</span>

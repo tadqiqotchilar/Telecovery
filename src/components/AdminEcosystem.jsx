@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { dataManager } from '../data/dataManager';
+import CountryFlag from './CountryFlag';
 
 function generateAutoSubtext(type, country, category) {
   const formatNumber = (num) => {
@@ -297,7 +298,7 @@ function AdminEcosystem() {
                 <option value="all">Barcha Davlatlar</option>
                 {countries.map(c => (
                   <option key={c.id} value={c.id}>
-                    {c.flag} {c.name}
+                    {c.id.toUpperCase()} - {c.name}
                   </option>
                 ))}
               </select>
@@ -395,8 +396,13 @@ function AdminEcosystem() {
                       </td>
 
                       <td>
-                        <span className="table-country">
-                          {countryObj ? `${countryObj.flag} ${countryObj.name}` : item.country.toUpperCase()}
+                        <span className="table-country" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {countryObj ? (
+                            <>
+                              <CountryFlag countryId={countryObj.id} style={{ width: '20px', height: '14px' }} />
+                              <span>{countryObj.name}</span>
+                            </>
+                          ) : item.country.toUpperCase()}
                         </span>
                       </td>
                       <td>
@@ -548,7 +554,7 @@ function AdminEcosystem() {
                   >
                     {countries.map(c => (
                       <option key={c.id} value={c.id}>
-                        {c.flag} {c.name}
+                        {c.id.toUpperCase()} - {c.name}
                       </option>
                     ))}
                   </select>
