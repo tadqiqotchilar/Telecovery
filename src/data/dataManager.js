@@ -148,7 +148,8 @@ export const dataManager = {
         }
 
         // Ensure countries exist in localStorage (backwards-compatible)
-        if (!localStorage.getItem('telecovery_countries')) {
+        const storedCountries = localStorage.getItem('telecovery_countries');
+        if (!storedCountries || storedCountries === '[]' || storedCountries === 'undefined') {
           localStorage.setItem('telecovery_countries', JSON.stringify(defaultCountries));
         }
       }
@@ -168,8 +169,42 @@ export const dataManager = {
         return items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       },
       async () => {
-        const items = JSON.parse(localStorage.getItem('telecovery_items') || '[]');
-        return items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        try {
+          const stored = localStorage.getItem('telecovery_items');
+          if (!stored || stored === '[]' || stored === 'undefined') {
+            const flatItems = [];
+            Object.keys(itemsData).forEach(countryCode => {
+              itemsData[countryCode].forEach(item => {
+                flatItems.push({
+                  ...item,
+                  country: countryCode,
+                  avatar: ''
+                });
+              });
+            });
+            localStorage.setItem('telecovery_items', JSON.stringify(flatItems));
+            return flatItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          }
+          const items = JSON.parse(stored);
+          if (!Array.isArray(items)) {
+            throw new Error("Invalid format");
+          }
+          return items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        } catch (e) {
+          console.error("Failed to parse items, resetting to default:", e);
+          const flatItems = [];
+          Object.keys(itemsData).forEach(countryCode => {
+            itemsData[countryCode].forEach(item => {
+              flatItems.push({
+                ...item,
+                country: countryCode,
+                avatar: ''
+              });
+            });
+          });
+          localStorage.setItem('telecovery_items', JSON.stringify(flatItems));
+          return flatItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        }
       }
     );
   },
@@ -288,7 +323,49 @@ export const dataManager = {
         return categories;
       },
       async () => {
-        return JSON.parse(localStorage.getItem('telecovery_categories') || '[]');
+        try {
+          const stored = localStorage.getItem('telecovery_categories');
+          if (!stored || stored === '[]' || stored === 'undefined') {
+            const categoriesSet = new Set();
+            Object.keys(itemsData).forEach(countryCode => {
+              itemsData[countryCode].forEach(item => {
+                if (item.category) {
+                  categoriesSet.add(item.category);
+                }
+              });
+            });
+            const cats = Array.from(categoriesSet);
+            if (!cats.includes('Uncategorized')) {
+              cats.push('Uncategorized');
+            }
+            localStorage.setItem('telecovery_categories', JSON.stringify(cats));
+            return cats;
+          }
+          const categories = JSON.parse(stored);
+          if (!Array.isArray(categories)) {
+            throw new Error("Invalid format");
+          }
+          if (!categories.includes('Uncategorized')) {
+            categories.push('Uncategorized');
+          }
+          return categories;
+        } catch (e) {
+          console.error("Failed to parse categories, resetting to default:", e);
+          const categoriesSet = new Set();
+          Object.keys(itemsData).forEach(countryCode => {
+            itemsData[countryCode].forEach(item => {
+              if (item.category) {
+                categoriesSet.add(item.category);
+              }
+            });
+          });
+          const cats = Array.from(categoriesSet);
+          if (!cats.includes('Uncategorized')) {
+            cats.push('Uncategorized');
+          }
+          localStorage.setItem('telecovery_categories', JSON.stringify(cats));
+          return cats;
+        }
       }
     );
   },
@@ -517,10 +594,33 @@ export const dataManager = {
         querySnapshot.forEach(d => {
           list.push({ id: d.id, ...d.data() });
         });
+        if (list.length === 0) {
+          console.log("Firestore countries empty. Seeding default countries...");
+          for (const c of defaultCountries) {
+            await withTimeout(setDoc(doc(db, 'countries', c.id), c), 3000);
+          }
+          return defaultCountries;
+        }
         return list;
       },
       async () => {
-        return JSON.parse(localStorage.getItem('telecovery_countries') || '[]');
+        try {
+          const stored = localStorage.getItem('telecovery_countries');
+          if (!stored || stored === '[]' || stored === 'undefined') {
+            localStorage.setItem('telecovery_countries', JSON.stringify(defaultCountries));
+            return defaultCountries;
+          }
+          const list = JSON.parse(stored);
+          if (!Array.isArray(list) || list.length === 0) {
+            localStorage.setItem('telecovery_countries', JSON.stringify(defaultCountries));
+            return defaultCountries;
+          }
+          return list;
+        } catch (e) {
+          console.error("Failed to parse countries, resetting to default:", e);
+          localStorage.setItem('telecovery_countries', JSON.stringify(defaultCountries));
+          return defaultCountries;
+        }
       }
     );
   },
