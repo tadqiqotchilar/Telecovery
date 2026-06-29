@@ -5,6 +5,7 @@ import ChannelList from './components/ChannelList';
 import CountrySelector from './components/CountrySelector';
 import ChannelDetail from './components/ChannelDetail';
 import CategoryView from './components/CategoryView';
+import SkeletonUI from './components/SkeletonUI';
 import { dataManager } from './data/dataManager';
 
 // Admin Component Imports
@@ -49,44 +50,33 @@ function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Watch for dynamic countries list changes
+  // Watch for dynamic countries and items changes in a single combined loader
   useEffect(() => {
     let active = true;
-    async function loadCountries() {
-      try {
-        const list = await dataManager.getCountries();
-        if (active) {
-          setCountries(list);
-          if (list.length > 0) {
-            setActiveCountry(prev => {
-              if (prev && list.some(c => c.id === prev.id)) {
-                return list.find(c => c.id === prev.id);
-              }
-              return list[0];
-            });
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load countries in App:", err);
-      }
-    }
-    loadCountries();
-    return () => { active = false; };
-  }, [route]);
-  
-  // Fetch items asynchronously on mount, route change, or country change
-  useEffect(() => {
-    let active = true;
-    async function load() {
+    async function loadInitialData() {
       setIsLoading(true);
       try {
-        const list = await dataManager.getItems();
+        const [countriesList, itemsList] = await Promise.all([
+          dataManager.getCountries(),
+          dataManager.getItems()
+        ]);
+        
         if (active) {
-          setClientItems(list);
+          setCountries(countriesList);
+          setClientItems(itemsList);
           
+          if (countriesList.length > 0) {
+            setActiveCountry(prev => {
+              if (prev && countriesList.some(c => c.id === prev.id)) {
+                return countriesList.find(c => c.id === prev.id);
+              }
+              return countriesList[0];
+            });
+          }
+
           // Asynchronously update real-time subscriber/member counts in the background
           (async () => {
-            const targets = list.filter(item => 
+            const targets = itemsList.filter(item => 
               (item.type === 'channel' || item.type === 'group') && item.username
             );
             for (const item of targets) {
@@ -109,16 +99,16 @@ function App() {
           })();
         }
       } catch (err) {
-        console.error("Failed to load client items:", err);
+        console.error("Failed to load initial data in App:", err);
       } finally {
         if (active) {
           setIsLoading(false);
         }
       }
     }
-    load();
+    loadInitialData();
     return () => { active = false; };
-  }, [route, activeCountry]);
+  }, [route]);
 
   useEffect(() => {
     // Initialize Telegram WebApp SDK if running inside Telegram
@@ -232,12 +222,13 @@ function App() {
     );
   }
 
-  // Client view (Telegram Mini App)
-  if (countries.length === 0 || !activeCountry) {
+  // Client view loading state (uses Skeleton UI as a unified process)
+  if (isLoading || countries.length === 0 || !activeCountry) {
     return (
-      <div className="client-loading-container">
-        <div className="client-loading-spinner"></div>
-        <p>Ma'lumotlar yuklanmoqda...</p>
+      <div className="app-viewport">
+        <div className="app-container animate-fade-in">
+          <SkeletonUI />
+        </div>
       </div>
     );
   }
@@ -334,19 +325,12 @@ function App() {
 
             {/* Main Content Area */}
             <main className="app-content">
-              {isLoading ? (
-                <div className="client-loading-container">
-                  <div className="client-loading-spinner"></div>
-                  <p>Ma'lumotlar yuklanmoqda...</p>
-                </div>
-              ) : (
-                <ChannelList
-                  items={filteredItems}
-                  onItemClick={(item) => setSelectedItem(item)}
-                  onOpenClick={handleOpenItem}
-                  onCategoryClick={(cat) => setSelectedCategory(cat)}
-                />
-              )}
+              <ChannelList
+                items={filteredItems}
+                onItemClick={(item) => setSelectedItem(item)}
+                onOpenClick={handleOpenItem}
+                onCategoryClick={(cat) => setSelectedCategory(cat)}
+              />
             </main>
 
             {/* Quick Link to Admin Panel for convenience */}
